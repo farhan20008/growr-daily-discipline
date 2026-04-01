@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,7 @@ import WaterPage from "./pages/WaterPage";
 import ProgressPage from "./pages/ProgressPage";
 import ProfilePage from "./pages/ProfilePage";
 import ScanPage from "./pages/ScanPage";
+import OnboardingPage, { hasCompletedOnboarding } from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,8 +23,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/onboarding" element={
+            hasCompletedOnboarding() ? <Navigate to="/" replace /> : <OnboardingPage />
+          } />
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={
+              hasCompletedOnboarding() ? <Dashboard /> : <Navigate to="/onboarding" replace />
+            } />
             <Route path="/meals" element={<MealsPage />} />
             <Route path="/workout" element={<WorkoutPage />} />
             <Route path="/water" element={<WaterPage />} />
