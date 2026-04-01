@@ -89,7 +89,7 @@ export default function OnboardingPage() {
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     localStorage.setItem(ONBOARDING_KEY, 'true');
-    navigate('/', { replace: true });
+    window.location.href = '/';
   };
 
   const next = () => {
