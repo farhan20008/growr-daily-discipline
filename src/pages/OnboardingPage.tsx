@@ -167,6 +167,18 @@ export default function OnboardingPage() {
                   max={5000}
                 />
               </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Daily protein goal (g)</label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 130"
+                  value={proteinGoal}
+                  onChange={e => setProteinGoal(e.target.value)}
+                  className="h-12 rounded-xl"
+                  min={30}
+                  max={400}
+                />
+              </div>
             </div>
           )}
         </div>
