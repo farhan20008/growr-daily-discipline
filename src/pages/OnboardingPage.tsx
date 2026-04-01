@@ -37,7 +37,7 @@ const slides = [
   {
     icon: Target,
     emoji: '🎯',
-    title: 'You're ready to grow',
+    title: "You're ready to grow",
     subtitle: 'No fancy supplements. No expensive diet. Just discipline, consistency, and real food.',
     color: 'bg-primary/15 text-primary',
     isFinal: true,
