@@ -1,14 +1,25 @@
 import { User, Target, Wallet, Dumbbell, Droplets, Utensils, Moon, Bell, ChevronRight } from 'lucide-react';
 import { userProfile } from '@/data/mockData';
+import { getOnboardingProfile } from '@/pages/OnboardingPage';
+
+const onboarding = getOnboardingProfile();
+const profile = {
+  ...userProfile,
+  ...(onboarding ? {
+    name: onboarding.name,
+    currentWeight: onboarding.currentWeight,
+    calorieGoal: onboarding.calorieGoal,
+  } : {}),
+};
 
 const settingsSections = [
   {
     title: 'Goals',
     items: [
-      { icon: Target, label: 'Daily Calorie Goal', value: `${userProfile.calorieGoal} cal` },
-      { icon: Target, label: 'Daily Protein Goal', value: `${userProfile.proteinGoal}g` },
-      { icon: Droplets, label: 'Daily Water Goal', value: `${userProfile.waterGoal / 1000}L` },
-      { icon: Target, label: 'Goal Weight', value: `${userProfile.goalWeight}kg` },
+      { icon: Target, label: 'Daily Calorie Goal', value: `${profile.calorieGoal} cal` },
+      { icon: Target, label: 'Daily Protein Goal', value: `${profile.proteinGoal}g` },
+      { icon: Droplets, label: 'Daily Water Goal', value: `${profile.waterGoal / 1000}L` },
+      { icon: Target, label: 'Goal Weight', value: `${profile.goalWeight}kg` },
     ],
   },
   {
