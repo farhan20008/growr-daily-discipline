@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase:*)",
+      "Bash(npm list:*)",
+      "Bash(node test-supabase.mjs)",
+      "Bash(npm run:*)",
+      "Bash(find . -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx -o -name *.json -o -name *.md \\\\\\))",
+      "Bash(grep -r \"defaultMeals\\\\|defaultWater\\\\|mock.*insert\\\\|pre.fill\" ./src --include=*.ts --include=*.tsx)",
+      "Bash(find . -type f \\\\\\(-name *lovable* -o -name *Lovable* \\\\\\))",
+      "Bash(find . -name favicon.ico -o -name icon.*)",
+      "Bash(find src/contexts src/services -type f -name *.ts -o -name *.tsx)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

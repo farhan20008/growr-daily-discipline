@@ -69,15 +69,6 @@ export const commonFoods: FoodItem[] = [
   { id: 'oats', name: 'Oats (50g)', calories: 190, protein: 7, serving: '50g', category: 'carb' },
 ];
 
-export const defaultMeals: MealEntry[] = [
-  { id: 'm1', foodId: 'egg', foodName: '1 Egg (boiled)', calories: 156, protein: 12, quantity: 2, serving: '1 piece', mealType: 'breakfast', timestamp: new Date().toISOString() },
-  { id: 'm2', foodId: 'bread', foodName: '2 Slices Bread', calories: 140, protein: 4, quantity: 1, serving: '2 slices', mealType: 'breakfast', timestamp: new Date().toISOString() },
-  { id: 'm3', foodId: 'banana', foodName: '1 Banana', calories: 89, protein: 1, quantity: 1, serving: '1 piece', mealType: 'breakfast', timestamp: new Date().toISOString() },
-  { id: 'm4', foodId: 'rice', foodName: '1 Cup Rice', calories: 412, protein: 8, quantity: 2, serving: '1 cup', mealType: 'lunch', timestamp: new Date().toISOString() },
-  { id: 'm5', foodId: 'dal', foodName: '1 Bowl Dal', calories: 120, protein: 9, quantity: 1, serving: '1 bowl', mealType: 'lunch', timestamp: new Date().toISOString() },
-  { id: 'm6', foodId: 'chicken', foodName: '100g Chicken', calories: 165, protein: 31, quantity: 1, serving: '100g', mealType: 'lunch', timestamp: new Date().toISOString() },
-];
-
 export const workoutPlan: WorkoutDay[] = [
   {
     day: 'saturday', label: 'Day 1', focus: 'Chest & Triceps',
@@ -131,36 +122,5 @@ export const workoutPlan: WorkoutDay[] = [
   },
 ];
 
-export const weeklyData: DailyData[] = [
-  { date: '2026-03-23', calories: 2150, protein: 110, water: 2500, workoutCompleted: true, weight: 68.5, energy: 4 },
-  { date: '2026-03-24', calories: 2300, protein: 125, water: 2000, workoutCompleted: true, weight: 68.3, energy: 3 },
-  { date: '2026-03-25', calories: 1980, protein: 95, water: 2750, workoutCompleted: false, weight: 68.4, energy: 3 },
-  { date: '2026-03-26', calories: 2400, protein: 130, water: 3000, workoutCompleted: true, weight: 68.2, energy: 5 },
-  { date: '2026-03-27', calories: 2200, protein: 115, water: 2250, workoutCompleted: true, weight: 68.1, energy: 4 },
-  { date: '2026-03-28', calories: 2050, protein: 100, water: 2500, workoutCompleted: false, weight: 68.3, energy: 3 },
-  { date: '2026-03-29', calories: 1082, protein: 65, water: 1500, workoutCompleted: false, weight: 68.2, energy: 4 },
-];
-
-export const dailyTips = [
-  "Add 2 boiled eggs to your breakfast. Cheap protein, big gains.",
-  "Soy chunks have more protein per taka than chicken. Use them.",
-  "Drink a glass of milk before bed. Easy 8g protein.",
-  "Don't skip dal with rice. Together they make a complete protein.",
-  "Track consistently for 7 days. That builds the habit.",
-  "Rest days matter. Muscles grow when you sleep.",
-  "Banana + milk after workout = solid budget recovery shake.",
-  "Chola is underrated. High protein, high fiber, very cheap.",
-  "Eat enough rice. You need carbs to fuel your workouts.",
-  "Consistency beats perfection. Log what you eat, every day.",
-];
-
-export const userProfile = {
-  name: 'User',
-  calorieGoal: 2400,
-  proteinGoal: 130,
-  waterGoal: 3000,
-  currentWeight: 68.2,
-  goalWeight: 73,
-  budgetMode: true,
-  workoutDays: 5,
-};
+// Note: weeklyData, dailyTips, defaultMeals, and userProfile are removed.
+// Use Supabase for real user data. Default profile values are in useAppStore.

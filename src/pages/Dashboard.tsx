@@ -1,20 +1,13 @@
-import { Flame, Beef, Droplets, Dumbbell, Lightbulb, ChevronRight, Utensils } from 'lucide-react';
+import { Flame, Beef, Droplets, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/hooks/useAppStore';
-import { dailyTips, userProfile, workoutPlan } from '@/data/mockData';
 import ProgressRing from '@/components/ui/ProgressRing';
 import ProgressBar from '@/components/ui/ProgressBar';
+import DailyScoreCard from '@/components/dashboard/DailyScoreCard';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { totalCalories, totalProtein, totalWater, meals } = useAppStore();
-  const profile = userProfile;
-
-  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const today = dayNames[new Date().getDay()];
-  const todayWorkout = workoutPlan.find(w => w.day === today);
-
-  const tip = dailyTips[new Date().getDate() % dailyTips.length];
+  const { totalCalories, totalProtein, totalWater, meals, profile } = useAppStore();
 
   const mealCounts = {
     breakfast: meals.filter(m => m.mealType === 'breakfast').length,
@@ -33,6 +26,9 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground font-medium">{greeting} 👋</p>
         <h1 className="text-2xl font-bold font-heading text-foreground mt-0.5">Growr</h1>
       </div>
+
+      {/* Daily Score Card */}
+      <DailyScoreCard />
 
       {/* Main Progress Cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -86,26 +82,6 @@ export default function Dashboard() {
         <ProgressBar value={totalWater} max={profile.waterGoal} barClassName="bg-info" />
       </button>
 
-      {/* Today's Workout */}
-      <button onClick={() => navigate('/workout')} className="w-full rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <Dumbbell className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                {todayWorkout ? todayWorkout.focus : 'Rest Day'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {todayWorkout ? `${todayWorkout.exercises.length} exercises` : 'Recovery & stretching'}
-              </p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
-      </button>
-
       {/* Meal Summary */}
       <button onClick={() => navigate('/meals')} className="w-full rounded-2xl bg-card p-4 shadow-sm text-left transition-transform active:scale-[0.98]">
         <div className="flex items-center gap-2 mb-3">
@@ -123,11 +99,10 @@ export default function Dashboard() {
       </button>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {[
           { label: 'Log meal', icon: Utensils, path: '/meals' },
           { label: 'Add water', icon: Droplets, path: '/water' },
-          { label: 'Workout', icon: Dumbbell, path: '/workout' },
         ].map(action => (
           <button
             key={action.label}
@@ -138,19 +113,6 @@ export default function Dashboard() {
             <span className="text-xs font-semibold">{action.label}</span>
           </button>
         ))}
-      </div>
-
-      {/* Daily Tip */}
-      <div className="rounded-2xl bg-accent/50 p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 mt-0.5">
-            <Lightbulb className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-accent-foreground mb-1">Daily tip</p>
-            <p className="text-sm text-foreground/80 leading-relaxed">{tip}</p>
-          </div>
-        </div>
       </div>
     </div>
   );

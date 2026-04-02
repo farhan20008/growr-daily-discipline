@@ -1,18 +1,20 @@
 import { Droplets, Plus } from 'lucide-react';
 import { useAppStore } from '@/hooks/useAppStore';
-import { userProfile, weeklyData } from '@/data/mockData';
 import ProgressRing from '@/components/ui/ProgressRing';
 import { BarChart, Bar, XAxis, ResponsiveContainer, Cell } from 'recharts';
 
 export default function WaterPage() {
-  const { totalWater, addWater } = useAppStore();
-  const goal = userProfile.waterGoal;
+  const { totalWater, addWater, getWeeklyData, profile } = useAppStore();
+  const goal = profile.waterGoal;
   const glasses = Math.floor(totalWater / 250);
+
+  const weeklyData = getWeeklyData();
+  const todayISO = new Date().toISOString().split('T')[0];
 
   const chartData = weeklyData.map(d => ({
     day: new Date(d.date).toLocaleDateString('en', { weekday: 'short' }),
     water: d.water / 1000,
-    isToday: d.date === '2026-03-29',
+    isToday: d.date === todayISO,
   }));
 
   return (

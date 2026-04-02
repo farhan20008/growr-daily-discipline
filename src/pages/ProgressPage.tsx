@@ -1,14 +1,23 @@
 import { TrendingUp, Scale, Flame, Beef, Dumbbell, Zap, Camera } from 'lucide-react';
-import { weeklyData, userProfile } from '@/data/mockData';
 import { LineChart, Line, XAxis, ResponsiveContainer, Tooltip, BarChart, Bar, Cell } from 'recharts';
+import DisciplineTrend from '@/components/progress/DisciplineTrend';
+import ConsistencyHeatmap from '@/components/progress/ConsistencyHeatmap';
+import { useAppStore } from '@/hooks/useAppStore';
 
 export default function ProgressPage() {
-  const avg = (arr: number[]) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  const { getWeeklyData, profile } = useAppStore();
+  const weeklyData = getWeeklyData();
+
+  const avg = (arr: number[]) => {
+    if (arr.length === 0) return 0;
+    return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  };
 
   const avgCal = avg(weeklyData.map(d => d.calories));
   const avgPro = avg(weeklyData.map(d => d.protein));
   const workoutDays = weeklyData.filter(d => d.workoutCompleted).length;
-  const avgEnergy = (weeklyData.reduce((s, d) => s + (d.energy || 0), 0) / weeklyData.length).toFixed(1);
+  // Note: energy tracking not implemented yet, will be 0
+  const avgEnergy = "0.0";
 
   const weightData = weeklyData.filter(d => d.weight).map(d => ({
     day: new Date(d.date).toLocaleDateString('en', { weekday: 'short' }),
@@ -18,7 +27,7 @@ export default function ProgressPage() {
   const calData = weeklyData.map(d => ({
     day: new Date(d.date).toLocaleDateString('en', { weekday: 'short' }),
     calories: d.calories,
-    goal: userProfile.calorieGoal,
+    goal: profile.calorieGoal,
   }));
 
   return (
@@ -31,8 +40,8 @@ export default function ProgressPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Avg Calories', value: `${avgCal}`, icon: Flame, sub: `Goal: ${userProfile.calorieGoal}` },
-          { label: 'Avg Protein', value: `${avgPro}g`, icon: Beef, sub: `Goal: ${userProfile.proteinGoal}g` },
+          { label: 'Avg Calories', value: `${avgCal}`, icon: Flame, sub: `Goal: ${profile.calorieGoal}` },
+          { label: 'Avg Protein', value: `${avgPro}g`, icon: Beef, sub: `Goal: ${profile.proteinGoal}g` },
           { label: 'Workouts', value: `${workoutDays}/7`, icon: Dumbbell, sub: 'This week' },
           { label: 'Energy', value: `${avgEnergy}/5`, icon: Zap, sub: 'Avg this week' },
         ].map(stat => (
@@ -47,12 +56,18 @@ export default function ProgressPage() {
         ))}
       </div>
 
+      {/* Discipline Score Trend */}
+      <DisciplineTrend />
+
+      {/* Consistency Heatmap */}
+      <ConsistencyHeatmap />
+
       {/* Weight Trend */}
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Scale className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Weight Trend</h3>
-          <span className="text-xs text-muted-foreground ml-auto">{userProfile.currentWeight}kg → {userProfile.goalWeight}kg</span>
+          <span className="text-xs text-muted-foreground ml-auto">{profile.currentWeight}kg → {profile.goalWeight}kg</span>
         </div>
         <ResponsiveContainer width="100%" height={120}>
           <LineChart data={weightData}>
