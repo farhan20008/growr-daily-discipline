@@ -5,6 +5,8 @@ import { useAppStore } from '@/hooks/useAppStore';
 import { MealEntry } from '@/data/mockData';
 import { toast } from 'sonner';
 
+const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-meal`;
+
 const mealTypes = ['breakfast', 'lunch', 'snacks', 'dinner'] as const;
 const mealEmojis = { breakfast: '🌅', lunch: '☀️', snacks: '🍌', dinner: '🌙' };
 
@@ -48,18 +50,42 @@ export default function MealPhotoTab() {
       const r = new FileReader();
       r.onload = () => {
         const result = r.result as string;
-        resolve(result.split(',')[1]); // strip data:... prefix
+        resolve(result.split(',')[1]);
       };
       r.readAsDataURL(file);
     });
 
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-meal', {
-        body: { imageBase64: base64 },
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[analyzeImage] Session:', session ? 'exists' : 'null');
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        'x-client-info': 'supabase-js-v2',
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      console.log('[analyzeImage] Calling', FUNCTION_URL);
+
+      const response = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ imageBase64: base64 }),
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      console.log('[analyzeImage] Response status:', response.status);
+
+      if (!response.ok) {
+        let errBody: any = {};
+        try { errBody = await response.json(); } catch {}
+        throw new Error(errBody?.error || `Request failed (${response.status})`);
+      }
+
+      const data = await response.json();
+      console.log('[analyzeImage] Data:', data);
 
       setResult(data as NutritionResult);
       setAnalyzeState('result');

@@ -111,7 +111,7 @@ export default function ProfilePage() {
     {
       title: 'Account',
       items: [
-        { icon: LogOut, label: 'Log Out', action: 'logout' },
+        { icon: LogOut, label: 'LogOut Your Account', action: 'logout' },
       ],
     },
   ];

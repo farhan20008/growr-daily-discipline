@@ -3,12 +3,19 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-supabase-authorization",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const SYSTEM_PROMPT = `You are a nutrition analyst for Bangladeshi food. Analyze the meal photo and estimate nutrition values with realistic portions.
+
+Common Bangladeshi foods: rice, dal, bhaji, fish curry, chicken curry, paratha, roti, egg dishes, soy chunks, beef bhuna, etc.
+
+Be accurate with calorie estimates -- a plate of rice with curry is typically 400-600 kcal, not 1000 kcal. A single egg is ~70 kcal. Be realistic.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
   try {
@@ -20,137 +27,83 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are a nutrition analyst for Bangladeshi food. Analyze the meal photo and return a JSON object with these exact fields:
-- name: string (the dish/food name, be specific)
-- calories: number (estimated total kcal)
-- protein: number (grams)
-- carbs: number (grams)
-- fat: number (grams)
-- fiber: number (grams)
-- healthScore: number (1-10, where 10 is healthiest)
-- healthNote: string (one sentence explaining the score)
-- items: array of strings (individual food items detected)
-- serving: string (estimated portion size)
-
-Be realistic with Bangladeshi portions. Common foods: rice, dal, bhaji, fish curry, chicken curry, paratha, roti, egg dishes, etc.
-Return ONLY the JSON object, no markdown or extra text.`,
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: "Analyze this meal photo and estimate the nutrition values.",
-                },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:image/jpeg;base64,${imageBase64}`,
-                  },
-                },
+          contents: [{
+            parts: [
+              { text: SYSTEM_PROMPT + "\n\nReturn ONLY a JSON object with these exact fields:\n{\"name\": \"...\", \"calories\": ..., \"protein\": ..., \"carbs\": ..., \"fat\": ..., \"fiber\": ..., \"healthScore\": ..., \"healthNote\": \"...\", \"items\": [...], \"serving\": \"...\"}" },
+              { inline_data: { mime_type: "image/jpeg", data: imageBase64 } },
+            ],
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                name: { type: "STRING" },
+                calories: { type: "NUMBER" },
+                protein: { type: "NUMBER" },
+                carbs: { type: "NUMBER" },
+                fat: { type: "NUMBER" },
+                fiber: { type: "NUMBER" },
+                healthScore: { type: "NUMBER" },
+                healthNote: { type: "STRING" },
+                items: { type: "ARRAY", items: { type: "STRING" } },
+                serving: { type: "STRING" },
+              },
+              required: [
+                "name", "calories", "protein", "carbs", "fat",
+                "fiber", "healthScore", "healthNote", "items", "serving",
               ],
             },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "return_nutrition",
-                description: "Return structured nutrition analysis of a meal photo",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    calories: { type: "number" },
-                    protein: { type: "number" },
-                    carbs: { type: "number" },
-                    fat: { type: "number" },
-                    fiber: { type: "number" },
-                    healthScore: { type: "number" },
-                    healthNote: { type: "string" },
-                    items: { type: "array", items: { type: "string" } },
-                    serving: { type: "string" },
-                  },
-                  required: ["name", "calories", "protein", "carbs", "fat", "fiber", "healthScore", "healthNote", "items", "serving"],
-                  additionalProperties: false,
-                },
-              },
-            },
-          ],
-          tool_choice: { type: "function", function: { name: "return_nutrition" } },
+          },
         }),
       }
     );
 
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("Gemini API error:", response.status, errorBody);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add funds in Settings → Workspace → Usage." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
       return new Response(
-        JSON.stringify({ error: "Failed to analyze meal" }),
+        JSON.stringify({ error: `AI analysis failed. Please try again.` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const data = await response.json();
-    
-    // Extract from tool call response
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
-      const nutrition = JSON.parse(toolCall.function.arguments);
-      return new Response(JSON.stringify(nutrition), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      console.error("Gemini response:", JSON.stringify(data));
+      throw new Error("Empty response from Gemini API");
     }
 
-    // Fallback: try parsing content directly
-    const content = data.choices?.[0]?.message?.content || "";
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const nutrition = JSON.parse(jsonMatch[0]);
-      return new Response(JSON.stringify(nutrition), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(
-      JSON.stringify({ error: "Could not parse nutrition data" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const nutrition = JSON.parse(text);
+    return new Response(JSON.stringify(nutrition), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (e) {
     console.error("analyze-meal error:", e);
+    const message = e instanceof Error ? e.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
+
+
