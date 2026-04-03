@@ -11,7 +11,12 @@
       "Bash(find . -name favicon.ico -o -name icon.*)",
       "Bash(find src/contexts src/services -type f -name *.ts -o -name *.tsx)",
       "Bash(npx tsc:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh issue:*)",
+      "Bash(winget install:*)"
     ]
   }
 }

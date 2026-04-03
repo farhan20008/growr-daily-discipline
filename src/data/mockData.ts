@@ -121,6 +121,3 @@ export const workoutPlan: WorkoutDay[] = [
     ],
   },
 ];
-
-// Note: weeklyData, dailyTips, defaultMeals, and userProfile are removed.
-// Use Supabase for real user data. Default profile values are in useAppStore.
