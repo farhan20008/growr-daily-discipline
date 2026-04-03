@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { MealEntry, WaterEntry } from '@/data/mockData';
-import { calculateDailyScore, getRank, getRankProgress, generateCoachFeedback, getDayName, type CoachMessage, type Rank } from '@/utils/disciplineEngine';
+import { calculateDailyScore, getRank, getRankProgress, getDayName, type Rank } from '@/utils/disciplineEngine';
+import { generateCoachAdvice, type CoachAdvice } from '@/utils/coachSystem';
 
 interface AppState {
   meals: MealEntry[];
@@ -31,7 +32,7 @@ interface DisciplineState {
   disciplineCalendar: Record<string, boolean>;
   rank: Rank;
   rankProgress: number;
-  coachFeedback: CoachMessage[];
+  coachAdvice: CoachAdvice;
 }
 
 interface RootState {
@@ -74,7 +75,7 @@ function loadDisciplineState(): DisciplineState {
     disciplineCalendar: {},
     rank: 'beginner',
     rankProgress: 0,
-    coachFeedback: [],
+    coachAdvice: { message: "Let's get started — log your first meal!", priority: 'perfect', suggestions: [] },
   };
 }
 
@@ -100,7 +101,7 @@ interface AppStateContextValue {
   disciplineCalendar: Record<string, boolean>;
   rank: Rank;
   rankProgress: number;
-  coachFeedback: CoachMessage[];
+  coachAdvice: CoachAdvice;
   addMeal: (meal: MealEntry) => void;
   removeMeal: (id: string) => void;
   addWater: (amount: number) => void;
@@ -126,7 +127,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const todayISO = new Date().toISOString().split('T')[0];
     const dayName = getDayName();
     const score = calculateDailyScore(app.meals, app.waterEntries, app.workoutState, app.profile, dayName);
-    const hour = new Date().getHours();
 
     setRoot(prev => {
       const prevDiscipline = prev.discipline;
@@ -148,19 +148,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         bestStreak = Math.max(prevDiscipline.bestStreak, currentStreak);
       }
 
+      const totalProtein = app.meals.reduce((s, m) => s + (m?.protein || 0), 0);
+      const totalCalories = app.meals.reduce((s, m) => s + (m?.calories || 0), 0);
+      const totalWater = app.waterEntries.reduce((s, w) => s + (w?.amount || 0), 0);
+
+      const advice: CoachAdvice = generateCoachAdvice({
+        caloriesConsumed: totalCalories,
+        calorieGoal: app.profile.calorieGoal,
+        proteinConsumed: totalProtein,
+        proteinGoal: app.profile.proteinGoal,
+        waterConsumed: totalWater,
+        waterGoal: app.profile.waterGoal,
+        workoutCompleted: false,
+      });
+
       const newWeeklyScores = { ...prevDiscipline.weeklyScores, [todayISO]: score };
       const rank = getRank(currentStreak);
       const rankProgress = getRankProgress(currentStreak);
-      const feedback = generateCoachFeedback(app.meals, app.waterEntries, app.workoutState, app.profile, score, hour);
-
-      if (isNewDay && currentStreak === 0 && prevDiscipline.currentStreak > 0) {
-        feedback.unshift({
-          id: 'streak-broken',
-          type: 'streak',
-          message: `Streak broken! You had ${prevDiscipline.currentStreak} days. Start a new one today.`,
-          priority: 1,
-        });
-      }
 
       return {
         ...prev,
@@ -177,7 +181,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           },
           rank,
           rankProgress,
-          coachFeedback: feedback,
+          coachAdvice: advice,
         },
       };
     });
@@ -294,7 +298,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     disciplineCalendar: discipline.disciplineCalendar,
     rank: discipline.rank,
     rankProgress: discipline.rankProgress,
-    coachFeedback: discipline.coachFeedback,
+    coachAdvice: discipline.coachAdvice,
     addMeal,
     removeMeal,
     addWater,

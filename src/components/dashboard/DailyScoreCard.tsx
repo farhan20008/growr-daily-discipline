@@ -2,6 +2,15 @@ import { useAppStore } from '@/hooks/useAppStore';
 import ProgressRing from '@/components/ui/ProgressRing';
 import ProgressBar from '@/components/ui/ProgressBar';
 
+const PRIORITY_EMOJI: Record<string, string> = {
+  perfect: '🎯',
+  protein: '🥩',
+  calories: '🍽️',
+  hydration: '💧',
+  workout: '🏋️',
+  macros: '⚖️',
+};
+
 const RANK_LABELS: Record<string, string> = {
   beginner: 'Beginner',
   consistent: 'Consistent',
@@ -10,7 +19,7 @@ const RANK_LABELS: Record<string, string> = {
 };
 
 export default function DailyScoreCard() {
-  const { todayScore, currentStreak, rank, rankProgress, bestStreak, coachFeedback } = useAppStore();
+  const { todayScore, currentStreak, rank, rankProgress, bestStreak, coachAdvice } = useAppStore();
 
   // Determine color based on score
   const getScoreColor = () => {
@@ -95,13 +104,30 @@ export default function DailyScoreCard() {
         </div>
       )}
 
-      {/* Coach Feedback Preview (first item if exists) */}
-      {coachFeedback[0] && (
-        <div className="mt-4 p-3 rounded-xl bg-accent/50 border border-accent">
-          <p className="text-xs font-medium text-accent-foreground mb-1">Coach says</p>
-          <p className="text-sm text-foreground">{coachFeedback[0].message}</p>
-        </div>
-      )}
+      {/* Coach Advice */}
+      <div className={`mt-4 p-3 rounded-xl border ${
+        coachAdvice.priority === 'perfect'
+          ? 'bg-success/10 border-success/20'
+          : coachAdvice.priority === 'protein'
+          ? 'bg-primary/10 border-primary/20'
+          : coachAdvice.priority === 'hydration'
+          ? 'bg-blue-500/10 border-blue-500/20'
+          : coachAdvice.priority === 'calories'
+          ? 'bg-amber-500/10 border-amber-500/20'
+          : 'bg-accent/50 border-accent'
+      }`}>
+        <p className="text-xs font-medium text-accent-foreground mb-1">
+          {PRIORITY_EMOJI[coachAdvice.priority]} Coach says
+        </p>
+        <p className="text-sm text-foreground">{coachAdvice.message}</p>
+        {coachAdvice.suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {coachAdvice.suggestions.map((s, i) => (
+              <span key={i} className="text-xs bg-background/50 px-2 py-1 rounded-full text-foreground">{s}</span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
